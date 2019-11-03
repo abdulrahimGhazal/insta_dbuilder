@@ -42,17 +42,13 @@ def get_json(file_name):
 
 def get_dominant_color(pic_name):
     NUM_CLUSTERS = 5
-
-    # print('reading image')
     im = Image.open(pic_name)
     im = im.resize((150, 150))      # optional, to reduce time
     ar = np.asarray(im)
     shape = ar.shape
     ar = ar.reshape(scipy.product(shape[:2]), shape[2]).astype(float)
 
-    # print('finding clusters')
-    codes, dist = scipy.cluster.vq.kmeans(ar, NUM_CLUSTERS)
-    # print('cluster centres:\n', codes)
+    codes, dist = scipy.cluster.vq.kmeans(ar, NUM_CLUSTERS)     # finding clusters
 
     vecs, dist = scipy.cluster.vq.vq(ar, codes)         # assign codes
     counts, bins = scipy.histogram(vecs, len(codes))    # count occurrences
@@ -63,8 +59,9 @@ def get_dominant_color(pic_name):
         color = int(color)
     colour = binascii.hexlify(bytearray(int(c) for c in peak)).decode('ascii')
     return  peak, colour
-
 # print(get_dominant_color('2013-07-22_01-57-08_UTC.jpg')[0])
+
+
 def cal_hashtags(text):
     words = text.split(' ')
     count = 0
@@ -131,7 +128,7 @@ def build_data(files_to_read, num_min):
         number_of_hashtags = 0
         has_desc = 0
         post_text = 0
-    #number_of_people_tagged = len(post_dict['node']['edge_media_to_tagged_user']['edges'])
+    # number_of_people_tagged = len(post_dict['node']['edge_media_to_tagged_user']['edges'])
     # number_of_hashtags = cal_hashtags(post_text)
     is_vid = 0
     if files_to_read[1][-3:] == 'mp4':
@@ -197,24 +194,6 @@ def write_to_file(file_path, lines):
     f.close()
 
 
-def create_file(files_to_read, file_to_write, user_names=None):
-    lines = []
-    count = 0
-    line=['username,followers, following,  num of minutes,has description, number of words, number of hashtags, number of comments, year, month, day, hour,post age, Red, Green, Blue,is_video,has_person, num_objects, likes']
-    if user_names is None:
-        num_minutes = 0
-    else:
-        num_minutes = get_minutes(user_names)
-    write_to_file(file_to_write, line)
-    for files in files_to_read:
-        line= [build_data(files,num_minutes)]
-        write_to_file(file_to_write, line)
-        print('done ' + str(count) + 'out of :' + str(len(files_to_read)))
-        count = count + 1
-
-
-
-
 
 def get_minutes(usernames):
     sum = 0
@@ -239,14 +218,30 @@ def get_minutes(usernames):
     performance = minutes//duration
     return performance
 
-
 def get_objects(file_name):
     # instruction = 'python yolo_opencv.py --image ' + file_name + ' --config yolov3.cfg --weights yolov3.weights --classes yolov3.txt'
     # os.system(instruction)
     predictions = yolo_opencv.get_predictions(file_name,'yolov3.cfg', 'yolov3.weights', 'yolov3.txt')
     return predictions
+
+
+def create_file(files_to_read, file_to_write, user_names=None):
+    lines = []
+    count = 0
+    line=['username,followers, following,  num of minutes,has description, number of words, number of hashtags, number of comments, year, month, day, hour,post age, Red, Green, Blue,is_video,has_person, num_objects, likes']
+    if user_names is None:
+        num_minutes = 0
+    else:
+        num_minutes = get_minutes(user_names)
+    write_to_file(file_to_write, line)
+    for files in files_to_read:
+        line= [build_data(files,num_minutes)]
+        write_to_file(file_to_write, line)
+        print('done ' + str(count) + 'out of :' + str(len(files_to_read)))
+        count = count + 1
+
     
 # os.system('python yolo_opencv.py --image 2013-07-22_01-57-08_UTC.jpg --config yolov3.cfg --weights yolov3.weights --classes yolov3.txt')
-create_file(check_files('C:\\Users\\Abd\\instagram usernames\\anton_hustlin'), 'C:\\Users\\Abd\\instagram usernames\\anton_hustlin\\data.txt', ['bumble beezy'])
+create_file(check_files(''), '', ['bumble beezy'])
 # print(get_objects('2013-07-22_01-57-08_UTC.jpg'))
 # print(get_minutes(['баста', 'basta']))
