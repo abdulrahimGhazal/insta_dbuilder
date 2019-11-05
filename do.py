@@ -15,8 +15,6 @@ import requests
 import cv2
 import yolo_opencv
 
-#test 3
-
 def get_immediate_files(directory_path):
     """
     This function gets the immediate files of the input directory.
@@ -36,12 +34,39 @@ def get_immediate_files(directory_path):
             if not os.path.isdir(os.path.join(directory_path, name))]
 
 def get_json(file_name):
-    return json.loads(lzma.open(file_name).read())
+    """
+    This function gets the json format from the file.
 
+    Parameters
+    ----------
+    file_name : str
+        The file path.
+
+    Returns
+    -------
+    object
+        The file objects in Json format.
+
+    """
+    return json.loads(lzma.open(file_name).read())
 # s = get_json('2013-07-22_01-57-08_UTC.json.xz')
 # print(s['node']['owner']['username'])
 
 def get_dominant_color(pic_name):
+    """
+    This function gets the dominant colour in an image given its path.
+
+    Parameters
+    ----------
+    pic_name : str
+        The picture path.
+
+    Returns
+    -------
+    list
+        The peak colour and the dominant colour.
+
+    """
     NUM_CLUSTERS = 5
     im = Image.open(pic_name)
     im = im.resize((150, 150))      # optional, to reduce time
@@ -62,8 +87,21 @@ def get_dominant_color(pic_name):
     return  peak, colour
 # print(get_dominant_color('2013-07-22_01-57-08_UTC.jpg')[0])
 
-
 def cal_hashtags(text):
+    """
+    This function counts how many hashtags exist in the picture description.
+
+    Parameters
+    ----------
+    text : str
+        The picture description.
+
+    Returns
+    -------
+    int
+        The hashtags count.
+
+    """
     words = text.split(' ')
     count = 0
     for word in words:
@@ -72,6 +110,20 @@ def cal_hashtags(text):
     return count
 
 def get_day_time(pic_name):
+    """
+    This function uses the picture name provided by Instgram to specify the datetime of the picture.
+
+    Parameters
+    ----------
+    pic_name : str
+        The picture file name.
+
+    Returns
+    -------
+    datetime
+        The datetime of the picture.
+
+    """
     parts = pic_name.split('_')
     date = parts[0].split('-')
     time = parts[1].split('-')
@@ -105,12 +157,40 @@ def write_string(text, file_path):
 
 
 def get_first_frame(file_name):
+    """
+    This function gets the first frame of a vedio (for object detection phase later) and writes it in an image file.
+
+    Parameters
+    ----------
+    file_name : str
+        The picture file name.
+
+    Returns
+    -------
+    str
+        A string telling the state of the saving process.
+
+    """
     vidcap = cv2.VideoCapture(file_name)
     success,image = vidcap.read()
     cv2.imwrite("frame_"+  file_name[:-3] + ".jpg", image)   # save frame as JPEG file 
     return "frame_"+  file_name[:-3] + ".jpg"
 
 def build_data(files_to_read, num_min):
+    """
+    This function construct a row of the data for a picture of the first frame of a vedio.
+
+    Parameters
+    ----------
+    files_to_read : str
+        The picture file name.
+
+    Returns
+    -------
+    str
+        A string telling the state of the saving process.
+
+    """
     number_of_hashtags = 0 
     post_dict = get_json(files_to_read[0])
     profile = post_dict['node']['owner']['username']
@@ -155,6 +235,20 @@ def build_data(files_to_read, num_min):
 
 
 def check_files(this_directory):
+    """
+    This function checks all files in a directory if they are pictures it includes them in the counting, otherwise, they are ignored.
+
+    Parameters
+    ----------
+    this_directory : str
+        The directory path.
+
+    Returns
+    -------
+    list
+        A list of all available pictures and vedios.
+
+    """
     files = get_immediate_files(this_directory)
     print('got files')
     files_to_read = []
@@ -194,9 +288,21 @@ def write_to_file(file_path, lines):
         f.write(u''.join(line+'\n'))
     f.close()
 
-
-
 def get_minutes(usernames):
+    """
+    This function calls the itunes API and countes the minutes of the albums for an artist, then divides it by the number of his activity years to get performance.
+
+    Parameters
+    ----------
+    usernames : str
+        The artist username.
+
+    Returns
+    -------
+    float
+        The artist's performance.
+
+    """
     sum = 0
     latest = 0
     earliest = 2019
@@ -220,13 +326,42 @@ def get_minutes(usernames):
     return performance
 
 def get_objects(file_name):
+    """
+    This function gets a list of objects detected in a picture.
+
+    Parameters
+    ----------
+    this_directory : str
+        The directory path.
+
+    Returns
+    -------
+    list
+        A list of all available pictures and vedios.
+
+    """
     # instruction = 'python yolo_opencv.py --image ' + file_name + ' --config yolov3.cfg --weights yolov3.weights --classes yolov3.txt'
     # os.system(instruction)
     predictions = yolo_opencv.get_predictions(file_name,'yolov3.cfg', 'yolov3.weights', 'yolov3.txt')
     return predictions
 
-
 def create_file(files_to_read, file_to_write, user_names=None):
+    """
+    Main method.
+
+    Parameters
+    ----------
+    files_to_read : str
+        The directory path of files to read.
+    file_to_write : str
+        The directory path of file to write results on.
+    user_names : list
+        A list of different usernames of the artist on itunes.
+
+    Returns
+    -------
+
+    """
     lines = []
     count = 0
     line=['username,followers, following,  num of minutes,has description, number of words, number of hashtags, number of comments, year, month, day, hour,post age, Red, Green, Blue,is_video,has_person, num_objects, likes']
